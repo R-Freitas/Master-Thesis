@@ -337,6 +337,7 @@ if __name__ == "__main__":
 
 
         epochs = 20000
+        test_epochs=[500,1000,5000,10000,15000,20000]
 
         ANN = NeuralNetwork(network_structure=[2, 150, 150, 3],
                                    learning_rate=0.01,
@@ -355,7 +356,7 @@ if __name__ == "__main__":
         print("============================================================================================")
 
         for element in matrices:
-            if (i == (1000 or 10000 or 15000 or 20000)):
+            if (i in test_epochs):
                 ANN.weights_matrices = element
                 print("Epochs: ",i)
                 corrects, wrongs = ANN.evaluate(train_data, train_labels)
