@@ -277,9 +277,9 @@ if __name__ == "__main__":
         #train_data=preprocessing.scale(train_data)
         #test_data=preprocessing.scale(test_data)
 
-        print(np.amax(scaled_data[:,0]),np.amax(scaled_data[:,1]))
-        print(np.amin(scaled_data[:,0]),np.amin(scaled_data[:,1]))
-
+        #print(np.amax(scaled_data[:,0]),np.amax(scaled_data[:,1]))
+        #print(np.amin(scaled_data[:,0]),np.amin(scaled_data[:,1]))
+        print(len(scaled_data))
 
         fig, sub = plt.subplots(3, 1)
         plt.subplots_adjust(wspace=0.4, hspace=0.4)
@@ -304,7 +304,7 @@ if __name__ == "__main__":
         ax1.set_ylabel("Area")
         ax1.set_title("Change")
 
-        plt.show()
+        #plt.show()
 
 
 
@@ -336,7 +336,7 @@ if __name__ == "__main__":
 
 
 
-        epochs = 20
+        epochs = 20000
 
         ANN = NeuralNetwork(network_structure=[2, 150, 150, 3],
                                    learning_rate=0.01,
@@ -345,13 +345,22 @@ if __name__ == "__main__":
         print("Epochs: ",epochs, "\tTraining Size: ",len(train_data),"\tStructure: ",ANN.structure,"\tBias: ",ANN.bias,"\tLearning Rate: ",ANN.learning_rate)
         matrices=ANN.train(train_data, train_labels_one_hot, epochs=epochs, intermediate_results=True)
         i=1
+        """
         print("============================================================================================")
+        corrects, wrongs = ANN.evaluate(train_data, train_labels)
+        print("accuracy train: ", corrects / ( corrects + wrongs))
+        corrects, wrongs = ANN.evaluate(test_data, test_labels)
+        print("accuracy test: ", corrects / ( corrects + wrongs))
+        """
+        print("============================================================================================")
+
         for element in matrices:
-            ANN.weights_matrices = element
-            print("Epochs: ",i)
-            corrects, wrongs = ANN.evaluate(train_data, train_labels)
-            print("accuracy train: ", corrects / ( corrects + wrongs))
-            corrects, wrongs = ANN.evaluate(test_data, test_labels)
-            print("accuracy: test", corrects / ( corrects + wrongs))
-            print("============================================================================================")
+            if (i == (1000 or 10000 or 15000 or 20000)):
+                ANN.weights_matrices = element
+                print("Epochs: ",i)
+                corrects, wrongs = ANN.evaluate(train_data, train_labels)
+                print("accuracy train: ", corrects / ( corrects + wrongs))
+                corrects, wrongs = ANN.evaluate(test_data, test_labels)
+                print("accuracy: test", corrects / ( corrects + wrongs))
+                print("============================================================================================")
             i += 1
