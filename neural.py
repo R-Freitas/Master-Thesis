@@ -336,7 +336,7 @@ if __name__ == "__main__":
 
 
 
-        epochs = 10
+        epochs = 20
 
         ANN = NeuralNetwork(network_structure=[2, 150, 150, 3],
                                    learning_rate=0.01,
