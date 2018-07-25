@@ -214,7 +214,7 @@ class Cell:
 
 if __name__ == "__main__":
 
-    new_data=0
+    new_data=1
     if (new_data==1) :
         cells=[]
         count=0
@@ -336,8 +336,8 @@ if __name__ == "__main__":
 
 
 
-        epochs = 20000
-        test_epochs=[500,1000,5000,10000,15000,20000]
+        epochs = 30000
+        test_epochs=[500,1000,5000,10000,15000,20000,25000,30000]
 
         ANN = NeuralNetwork(network_structure=[2, 150, 150, 3],
                                    learning_rate=0.01,
