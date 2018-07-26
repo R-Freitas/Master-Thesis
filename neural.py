@@ -214,7 +214,7 @@ class Cell:
 
 if __name__ == "__main__":
 
-    new_data=1
+    new_data=0
     if (new_data==1) :
         cells=[]
         count=0
@@ -232,9 +232,9 @@ if __name__ == "__main__":
         print (count," files found")
 
 
-        labeled_data=np.empty((0,3), int)
+        labeled_data=np.empty((0,3), float)
         for cell in cells:
-            labeled_data=np.vstack([labeled_data,[cell.totalintensity,cell.area,cell.Class]])
+            labeled_data=np.vstack([labeled_data,[cell.totalintensity,cell.area,int(cell.Class)]])
 
         np.random.shuffle(labeled_data)
 
@@ -248,7 +248,7 @@ if __name__ == "__main__":
         scaled_data=np.empty((len(labeled_data),3),float)
         scaled_data[:,0]=preprocessing.scale(labeled_data[:,0])
         scaled_data[:,1]=preprocessing.scale(labeled_data[:,1])
-        scaled_data[:,2]=labeled_data[:,2]
+        scaled_data[:,2]=labeled_data[:,2].astype(int)
 
 
 
