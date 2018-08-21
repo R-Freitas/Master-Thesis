@@ -214,41 +214,65 @@ class Cell:
 
 if __name__ == "__main__":
 
-    new_data=0
+    new_data=1
     if (new_data==1) :
-        cells=[]
         count=0
         dir = os.getcwd()
-        for roots, dirs, files in os.walk(dir):
-            for file in files:
-                if file.endswith('.mat'):
-                    path = os.path.realpath(os.path.join(roots,file))
-                    print(path)
-                    data = (sio.loadmat(path,struct_as_record=True))['storage']
-                    for case in data:
-                        cells.append(Cell(case['TotalIntensity'], case['Area'], case['CellCycle'][0][0]))
-                    count += 1
+        dirs=[]
+        dirs.append(dir)
+        various=1 #Use if you want to normalize seperatly each imediate sub directroy
 
-        print (count," files found")
+        scaled_data=np.empty((0,3),float)
+        if various == 1:
+            for roots, dirs, files in os.walk(dir):
+                break
 
 
-        labeled_data=np.empty((0,3), float)
-        for cell in cells:
-            labeled_data=np.vstack([labeled_data,[cell.totalintensity,cell.area,int(cell.Class)]])
 
-        np.random.shuffle(labeled_data)
+        for dir in dirs:
+            print("DIR: ",dir)
+            cells=[]
+            for roots, dirs, files in os.walk(dir):
+                for file in files:
+                    if file.endswith('.mat'):
+                        path = os.path.realpath(os.path.join(roots,file))
+                        print("PATH: ",path)
+                        data = (sio.loadmat(path,struct_as_record=True))['storage']
+                        print(data)
+                        print("HELLO")
+                        sys.exit()
+                        print("BYE BYE")
+                        for case in data:
+                            cells.append(Cell(case['TotalIntensity'], case['Area'], case['CellCycle'][0][0]))
+                        count += 1
 
-        """
-        fac_int = np.amax(labeled_data[:,0])+0.01
-        #fac_area=1
-        fac_area = np.amax(labeled_data[:,1])+0.01
-        scaled_data = np.asfarray(np.column_stack((labeled_data[:,0]/fac_int, labeled_data[:,1]/fac_area,labeled_data[:,2])))
-        """
 
-        scaled_data=np.empty((len(labeled_data),3),float)
-        scaled_data[:,0]=preprocessing.scale(labeled_data[:,0])
-        scaled_data[:,1]=preprocessing.scale(labeled_data[:,1])
-        scaled_data[:,2]=labeled_data[:,2].astype(int)
+
+
+
+
+            print(count, "files found")
+
+
+            labeled_data=np.empty((0,3), float)
+            for cell in cells:
+                labeled_data=np.vstack([labeled_data,[cell.totalintensity,cell.area,int(cell.Class)]])
+
+            np.random.shuffle(labeled_data)
+
+            """
+            fac_int = np.amax(labeled_data[:,0])+0.01
+            #fac_area=1
+            fac_area = np.amax(labeled_data[:,1])+0.01
+            scaled_data = np.asfarray(np.column_stack((labeled_data[:,0]/fac_int, labeled_data[:,1]/fac_area,labeled_data[:,2])))
+            """
+
+            temp_scaled_data=np.empty((len(labeled_data),3),float)
+            temp_scaled_data[:,0]=preprocessing.scale(labeled_data[:,0])
+            temp_scaled_data[:,1]=preprocessing.scale(labeled_data[:,1])
+            temp_scaled_data[:,2]=labeled_data[:,2].astype(int)
+
+            scaled_data=np.append(scaled_data, temp_scaled_data, axis=0)
 
 
 
@@ -336,7 +360,7 @@ if __name__ == "__main__":
 
 
 
-        epochs = 30000
+        epochs = 10
         test_epochs=[500,1000,5000,10000,15000,20000,25000,30000]
 
         ANN = NeuralNetwork(network_structure=[2, 150, 150, 3],
