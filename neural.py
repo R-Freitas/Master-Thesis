@@ -178,7 +178,7 @@ def set_class(x):
         return 4
 
     else:
-        return 0
+        return 5
 
 def set_color(x):
     if x == 'G1':
@@ -214,13 +214,13 @@ class Cell:
 
 if __name__ == "__main__":
 
-    new_data=1
+    new_data=0
     if (new_data==1) :
         count=0
         dir = os.getcwd()
         dirs=[]
         dirs.append(dir)
-        various=1 #Use if you want to normalize seperatly each imediate sub directroy
+        various=0 #Use if you want to normalize seperatly each imediate sub directroy
 
         scaled_data=np.empty((0,3),float)
         if various == 1:
@@ -238,12 +238,9 @@ if __name__ == "__main__":
                         path = os.path.realpath(os.path.join(roots,file))
                         print("PATH: ",path)
                         data = (sio.loadmat(path,struct_as_record=True))['storage']
-                        print(data)
-                        print("HELLO")
-                        sys.exit()
-                        print("BYE BYE")
                         for case in data:
-                            cells.append(Cell(case['TotalIntensity'], case['Area'], case['CellCycle'][0][0]))
+                            if (set_class(case['CellCycle'][0][0]) < 3):
+                                cells.append(Cell(case['TotalIntensity'], case['Area'], case['CellCycle'][0][0]))
                         count += 1
 
 
@@ -278,7 +275,7 @@ if __name__ == "__main__":
 
         size_of_learn_sample = int(len(scaled_data)*0.9)
         train_data = scaled_data[:size_of_learn_sample]
-        test_data = scaled_data[-size_of_learn_sample:]
+        test_data = scaled_data[:-size_of_learn_sample]
 
         test_labels = np.array(test_data[:,2]).astype(int)
         test_data = np.asfarray(np.column_stack((test_data[:,0],test_data[:,1])))
@@ -303,7 +300,7 @@ if __name__ == "__main__":
 
         #print(np.amax(scaled_data[:,0]),np.amax(scaled_data[:,1]))
         #print(np.amin(scaled_data[:,0]),np.amin(scaled_data[:,1]))
-        print(len(scaled_data))
+        print(len(scaled_data), "cells")
 
         fig, sub = plt.subplots(3, 1)
         plt.subplots_adjust(wspace=0.4, hspace=0.4)
@@ -360,7 +357,7 @@ if __name__ == "__main__":
 
 
 
-        epochs = 10
+        epochs = 1000
         test_epochs=[500,1000,5000,10000,15000,20000,25000,30000]
 
         ANN = NeuralNetwork(network_structure=[2, 150, 150, 3],

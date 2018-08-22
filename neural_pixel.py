@@ -104,8 +104,7 @@ class NeuralNetwork:
               epochs=1,
               intermediate_results=False):
 
-        bar = progressbar.ProgressBar(maxval=epochs, \
-            widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+        bar = progressbar.ProgressBar(maxval=epochs, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
         bar.start()
 
         intermediate_weights = []
@@ -178,7 +177,7 @@ def set_class(x):
     elif x == 'G2':
         return 4
     else:
-        return 0
+        return 5
 
 def set_color(x):
     if x == 'G1':
@@ -223,13 +222,11 @@ if __name__ == "__main__":
 
     new_data=1
     if (new_data==1) :
-        count=0
+        count_files=0
+        count_cells = 0
         dir = os.getcwd()
         dirs=[]
         dirs.append(dir)
-
-
-
 
         for dir in dirs:
             print("DIR: ",dir)
@@ -244,10 +241,11 @@ if __name__ == "__main__":
                         data = (sio.loadmat(path,struct_as_record=True))['storage']
 
                         for case in data:
-                            mask=np.matrix(case['Mask'][0])
-                            cells.append(Cell_Info(mask,case['CellCycle'][0][0]))
+                            count_cells += 1
+                            if (set_class(case['CellCycle'][0][0]) < 3):
+                                cells.append(Cell_Info(np.matrix(case['Mask'][0]),case['CellCycle'][0][0]))
 
-                        count += 1
+                        count_files += 1
 
                         """
                         #Routine used to print all cells from a mat file as an image
@@ -261,8 +259,8 @@ if __name__ == "__main__":
                         plt.show()
                         """
 
-            print(count, "files found")
-            print(len(cells), "cells found")
+            print(count_files, "file(s) found")
+            print(count_cells, "cell(s) found,", len(cells), "cell(s) used")
 
 
             """
@@ -289,42 +287,82 @@ if __name__ == "__main__":
                 print('=================================================')
             """
 
-            #With all the cells cells in a list, and an input size chosen it is
-            #time to create the input for the neural network itself
-            treated_cells=[]
+        #With all the cells cells in a list, and an input size chosen it is
+        #time to create the input for the neural network itself
+        treated_cells=[]
 
 
-            for cell in cells:
-                S_mask=np.zeros((FRAME_SIZE,FRAME_SIZE))
+        for cell in cells:
+            S_mask=np.zeros((FRAME_SIZE,FRAME_SIZE))
 
-                y_diff = cell.y_max - cell.y_min
-                x_diff = cell.x_max - cell.x_min
+            y_diff = cell.y_max - cell.y_min
+            x_diff = cell.x_max - cell.x_min
 
-                if (y_diff > FRAME_SIZE or x_diff > FRAME_SIZE):
-                    print("Impossible to fit cell, please increase frame size")
-                else:
-                    y_offset = int((FRAME_SIZE-y_diff)/2)
-                    x_offset = int((FRAME_SIZE-x_diff)/2)
+            if (y_diff > FRAME_SIZE or x_diff > FRAME_SIZE):
+                print("Impossible to fit cell, please increase frame size")
+            else:
+                y_offset = int((FRAME_SIZE-y_diff)/2)
+                x_offset = int((FRAME_SIZE-x_diff)/2)
 
-                    S_mask[y_offset:y_diff+y_offset+1,x_offset:x_diff+x_offset+1] = cell.Matrix[cell.y_min : cell.y_max+1, cell.x_min:cell.x_max+1]
-                    treated_cells.append(Cell_Info(S_mask.astype(int),cell.CellCycle))
-
-
+                S_mask[y_offset:y_diff+y_offset+1,x_offset:x_diff+x_offset+1] = cell.Matrix[cell.y_min : cell.y_max+1, cell.x_min:cell.x_max+1]
+                treated_cells.append(Cell_Info(S_mask.astype(float),cell.CellCycle))
 
 
+        del cells
+        labeled_data = np.array([(cell.Matrix,int(cell.Class)) for cell in treated_cells])
+
+        fac = 255  *0.99 + 0.01
+        labeled_data[:,0]=labeled_data[:,0]/fac
+
+
+        #==============DATA RANDOMIZING===============
+        #np.random.shuffle(labeled_data)
+        size_of_learn_sample = int(len(labeled_data)*0.9)
+        train_data = labeled_data[:size_of_learn_sample]
+        test_data = labeled_data[size_of_learn_sample:]
 
 
 
+        #===============TRAINING DATA=================
+        train_labels = train_data[:,1].astype(int)
+        train_labels = train_labels.reshape(train_labels.size,1).astype(int)
+        train_data = train_data[:,0]
+        train_data = train_data.reshape(train_data.size,1)
 
-        """
+
+        #===============TESTING DATA===================
+        test_labels = test_data[:,1].astype(int)
+        test_labels = test_labels.reshape(test_labels.size,1).astype(int)
+        test_data = test_data[:,0]
+        test_data = test_data.reshape(test_data.size,1)
+
+
+
+        #=========================ONE HOT FORMAT=======================
+        no_of_different_labels = 3
+        train_labels_one_hot   = np.zeros((train_labels.size,no_of_different_labels))
+        test_labels_one_hot    = np.zeros((test_labels.size,no_of_different_labels))
+
+
+        train_labels_one_hot[np.arange(train_labels.size),train_labels.T] = 1
+        test_labels_one_hot[np.arange(test_labels.size),test_labels.T]    = 1
+
+
+        train_labels_one_hot[train_labels_one_hot==0] = 0.01
+        train_labels_one_hot[train_labels_one_hot==1] = 0.99
+        test_labels_one_hot[test_labels_one_hot==0] = 0.01
+        test_labels_one_hot[test_labels_one_hot==1] = 0.99
+
+        #==================SAVING DATA===================================
         with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells.pkl", "bw") as fh:
             data = (train_data,
+                    test_data,
                     train_labels,
                     test_labels,
                     train_labels_one_hot,
                     test_labels_one_hot)
             pickle.dump(data, fh)
-        """
+
 
     else:
 
