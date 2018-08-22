@@ -12,7 +12,7 @@ from pprint import pprint
 import copy
 
 
-input_size = 140
+FRAME_SIZE = 140
 
 def truncated_normal(mean, sd, low, upp):
     return truncnorm((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
@@ -197,16 +197,14 @@ def set_color(x):
 
 
 
-class Mask:
-    def __init__(self,Matrix,Index,CellCycle):
+class Cell_Info:
+    def __init__(self,Matrix,CellCycle):
         self.Matrix = Matrix
-        self.Index = Index
+        self.Index = np.asarray(np.where(Matrix>0)).T
         self.y_min = min(self.Index[:,0])
         self.y_max = max(self.Index[:,0])
         self.x_min = min(self.Index[:,1])
         self.x_max = max(self.Index[:,1])
-        self.y_diff = self.y_max-self.y_min
-        self.x_diff = self.x_max-self.x_min
         self.Area = np.count_nonzero(self.Matrix)
         self.Intensity = self.Matrix.sum()
         self.CellCycle = str(CellCycle)
@@ -236,8 +234,8 @@ if __name__ == "__main__":
         for dir in dirs:
             print("DIR: ",dir)
             cells=[]
-            masks=[]
-            i=0 #Used to transverse the masks list when printing the images
+
+            i=0 #Used to transverse the cells list when printing the images
             for roots, dirs, files in os.walk(dir):
                 for file in files:
                     if file.endswith('.mat'):
@@ -246,18 +244,17 @@ if __name__ == "__main__":
                         data = (sio.loadmat(path,struct_as_record=True))['storage']
 
                         for case in data:
-                            matrix=np.matrix(case['Mask'][0])
-                            index=np.asarray(np.where(matrix>0)).T
-                            masks.append(Mask(matrix,index,case['CellCycle'][0][0]))
+                            mask=np.matrix(case['Mask'][0])
+                            cells.append(Cell_Info(mask,case['CellCycle'][0][0]))
 
                         count += 1
 
                         """
                         #Routine used to print all cells from a mat file as an image
                         fig=plt.figure(frameon=False)
-                        final_mask=np.zeros_like(masks[0].Matrix)
-                        for index in range(i,len(masks)):
-                            final_mask += masks[index].Matrix
+                        final_mask=np.zeros_like(cells[0].Matrix)
+                        for index in range(i,len(cells)):
+                            final_mask += cells[index].Matrix
                             i += 1
 
                         plt.imshow(final_mask, cmap='Blues',interpolation='nearest')
@@ -265,36 +262,55 @@ if __name__ == "__main__":
                         """
 
             print(count, "files found")
-            print(len(masks), "cells found")
+            print(len(cells), "cells found")
 
 
             """
             #Routine used to determine the maximum cell size and thus choose an
-            #appropriate input size (in this case 140)
+            #appropriate input size (in this case 140x140)
             pix_size=[]
-            for mask in masks:
-                pix_size.append([mask.y_diff,mask.x_diff])
+            for cell in cells:
+                pix_size.append([(cell.y_max-cell.y_min),(cell.x_max-cell.x_min)])
 
             pix_size=np.array(pix_size)
             print(np.amax(pix_size,axis=0))
             """
 
-
             """
-            #Routin used to check all information is correct
+            #Routine used to check if all information is correct
             print('=================================================')
             for i in range(10):
-                print(masks[i].y_min,masks[i].y_max)#Y min and max
-                print(masks[i].x_min,masks[i].x_max)#X min and max
-                print(masks[i].Intensity)
-                print(masks[i].Area)
-                print(masks[i].CellCycle)
-                print(masks[i].Class)
+                print("Y:",cells[i].y_min,cells[i].y_max)#Y min and max
+                print("X:",cells[i].x_min,cells[i].x_max)#X min and max
+                print(cells[i].Intensity)
+                print(cells[i].Area)
+                print(cells[i].CellCycle)
+                print(cells[i].Class)
                 print('=================================================')
             """
 
-            #With all the cells masks in a list, and an input size chosen it is
+            #With all the cells cells in a list, and an input size chosen it is
             #time to create the input for the neural network itself
+            treated_cells=[]
+
+
+            for cell in cells:
+                S_mask=np.zeros((FRAME_SIZE,FRAME_SIZE))
+
+                y_diff = cell.y_max - cell.y_min
+                x_diff = cell.x_max - cell.x_min
+
+                if (y_diff > FRAME_SIZE or x_diff > FRAME_SIZE):
+                    print("Impossible to fit cell, please increase frame size")
+                else:
+                    y_offset = int((FRAME_SIZE-y_diff)/2)
+                    x_offset = int((FRAME_SIZE-x_diff)/2)
+
+                    S_mask[y_offset:y_diff+y_offset+1,x_offset:x_diff+x_offset+1] = cell.Matrix[cell.y_min : cell.y_max+1, cell.x_min:cell.x_max+1]
+                    treated_cells.append(Cell_Info(S_mask.astype(int),cell.CellCycle))
+
+
+
 
 
 
