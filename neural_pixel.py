@@ -13,6 +13,8 @@ import copy
 
 
 FRAME_SIZE = 140
+#test_epochs=[10,25,50,75,90,100,250,500,750,1000]
+test_epochs=[1,5,10]
 
 def truncated_normal(mean, sd, low, upp):
     return truncnorm((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
@@ -112,7 +114,7 @@ class NeuralNetwork:
         for epoch in range(epochs):
             for i in range(len(data_array)):
                 self.train_single(data_array[i], labels_one_hot_array[i])
-            if intermediate_results:
+            if (count in test_epochs):
                 intermediate_weights.append(copy.deepcopy(self.weights_matrices))
             bar.update(count)
             count += 1
@@ -220,7 +222,7 @@ class Cell_Info:
 
 if __name__ == "__main__":
 
-    new_data=1
+    new_data=0
     if (new_data==1) :
         count_files=0
         count_cells = 0
@@ -325,16 +327,17 @@ if __name__ == "__main__":
 
         #===============TRAINING DATA=================
         train_labels = train_data[:,1].astype(int)
-        train_labels = train_labels.reshape(train_labels.size,1).astype(int)
+        #train_labels = train_labels.reshape(train_labels.size,1).astype(int)
         train_data = train_data[:,0]
-        train_data = train_data.reshape(train_data.size,1)
+        #train_data = train_data.reshape(train_data.size,1)
+
 
 
         #===============TESTING DATA===================
         test_labels = test_data[:,1].astype(int)
-        test_labels = test_labels.reshape(test_labels.size,1).astype(int)
+        #test_labels = test_labels.reshape(test_labels.size,1).astype(int)
         test_data = test_data[:,0]
-        test_data = test_data.reshape(test_data.size,1)
+        #test_data = test_data.reshape(test_data.size,1)
 
 
 
@@ -353,7 +356,11 @@ if __name__ == "__main__":
         test_labels_one_hot[test_labels_one_hot==0] = 0.01
         test_labels_one_hot[test_labels_one_hot==1] = 0.99
 
+
+
+        #print(np.hstack((test_labels.reshape(test_labels.size,1).astype(int), test_labels_one_hot)))
         #==================SAVING DATA===================================
+
         with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells.pkl", "bw") as fh:
             data = (train_data,
                     test_data,
@@ -379,19 +386,30 @@ if __name__ == "__main__":
 
 
 
+        for i in range(len(train_data)):
+            train_data[i]=train_data[i].ravel()
+        for i in range(len(test_data)):
+            test_data[i]=test_data[i].ravel()
+
+
+
+
+
 
 
 
         epochs = 10
-        test_epochs=[500,1000,5000,10000,15000,20000,25000,30000]
+        #test_epochs=[500,1000,5000,10000,15000,20000,25000,30000]
 
-        ANN = NeuralNetwork(network_structure=[2, 150, 150, 3],
+
+        image_size=FRAME_SIZE*FRAME_SIZE
+        ANN = NeuralNetwork(network_structure=[image_size,500,500, 3],
                                    learning_rate=0.01,
                                    bias=1)
 
         print("Epochs: ",epochs, "\tTraining Size: ",len(train_data),"\tStructure: ",ANN.structure,"\tBias: ",ANN.bias,"\tLearning Rate: ",ANN.learning_rate)
         matrices=ANN.train(train_data, train_labels_one_hot, epochs=epochs, intermediate_results=True)
-        i=1
+
         """
         print("============================================================================================")
         corrects, wrongs = ANN.evaluate(train_data, train_labels)
@@ -399,15 +417,14 @@ if __name__ == "__main__":
         corrects, wrongs = ANN.evaluate(test_data, test_labels)
         print("accuracy test: ", corrects / ( corrects + wrongs))
         """
+        i=0
         print("============================================================================================")
-
         for element in matrices:
-            if (i in test_epochs):
-                ANN.weights_matrices = element
-                print("Epochs: ",i)
-                corrects, wrongs = ANN.evaluate(train_data, train_labels)
-                print("accuracy train: ", corrects / ( corrects + wrongs))
-                corrects, wrongs = ANN.evaluate(test_data, test_labels)
-                print("accuracy: test", corrects / ( corrects + wrongs))
-                print("============================================================================================")
+            ANN.weights_matrices = element
+            print("Epochs: ",test_epochs[i])
+            corrects, wrongs = ANN.evaluate(train_data, train_labels)
+            print("accuracy train: ", corrects / ( corrects + wrongs))
+            corrects, wrongs = ANN.evaluate(test_data, test_labels)
+            print("accuracy: test", corrects / ( corrects + wrongs))
+            print("============================================================================================")
             i += 1
