@@ -10,11 +10,12 @@ import matplotlib.gridspec as gridspec
 import progressbar
 from pprint import pprint
 import copy
+import time
 
 
 FRAME_SIZE = 140
-#test_epochs=[10,25,50,75,90,100,250,500,750,1000]
-test_epochs=[1,5,10]
+test_epochs=[10,25,50,75,90,100,200,250,300,400,500]
+#test_epochs=[1,5,10,25,50,100]
 
 def truncated_normal(mean, sd, low, upp):
     return truncnorm((low - mean) / sd, (upp - mean) / sd, loc=mean, scale=sd)
@@ -313,6 +314,7 @@ if __name__ == "__main__":
         del cells
         labeled_data = np.array([(cell.Matrix,int(cell.Class)) for cell in treated_cells])
 
+
         fac = 255  *0.99 + 0.01
         labeled_data[:,0]=labeled_data[:,0]/fac
 
@@ -398,7 +400,7 @@ if __name__ == "__main__":
 
 
 
-        epochs = 10
+        epochs = 500
         #test_epochs=[500,1000,5000,10000,15000,20000,25000,30000]
 
 
@@ -407,8 +409,17 @@ if __name__ == "__main__":
                                    learning_rate=0.01,
                                    bias=1)
 
+
+
+        start_time = time.time()
+        print("Start time:",time.strftime("%H:%M:%S", time.gmtime(start_time)))
+
         print("Epochs: ",epochs, "\tTraining Size: ",len(train_data),"\tStructure: ",ANN.structure,"\tBias: ",ANN.bias,"\tLearning Rate: ",ANN.learning_rate)
         matrices=ANN.train(train_data, train_labels_one_hot, epochs=epochs, intermediate_results=True)
+
+        elapsed_time = time.time() - start_time
+        print("Elapsed time:",time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
+
 
         """
         print("============================================================================================")
