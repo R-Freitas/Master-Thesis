@@ -3,6 +3,12 @@
 import tensorflow as tf
 from tensorflow import keras
 from keras.utils import to_categorical
+from keras.utils import np_utils
+
+#Optimizar libraries
+from hyperopt import Trials, STATUS_OK, tpe
+from hyperas import optim
+from hyperas.distributions import choice, uniform
 
 # Helper libraries
 import numpy as np
@@ -14,6 +20,7 @@ import progressbar
 import copy
 import time
 from sklearn import preprocessing
+from sklearn import model_selection
 
 
 def set_class(x):
@@ -135,36 +142,22 @@ if (new_data==1) :
             treated_cells.append(Cell_Info(S_mask.astype(float),cell.CellCycle))
 
 
-
-    labeled_data = np.array([(cell.Area,cell.Intensity,int(cell.Class)) for cell in treated_cells])
     del cells
+    data = np.array([(cell.Area,cell.Intensity) for cell in treated_cells])
+    labels = to_categorical(np.array([(int(cell.Class)) for cell in treated_cells]),num_classes=3)
+
+
+
+    scaler=preprocessing.MinMaxScaler()
+    print(np.std(data[:,0]),np.std(data[:,1]))
+    data=scaler.fit_transform(data)
+    print(np.amax(data[:,0]),np.amax(data[:,1]))
+    print(np.std(data[:,0]),np.std(data[:,1]))
     del treated_cells
 
 
 
-
-    #==============DATA RANDOMIZING===============
-    np.random.shuffle(labeled_data)
-    labeled_data[:,0]=preprocessing.scale(labeled_data[:,0])
-    labeled_data[:,1]=preprocessing.scale(labeled_data[:,1])
-    size_of_learn_sample = int(len(labeled_data)*0.9)
-    train_data = labeled_data[:size_of_learn_sample]
-    test_data = labeled_data[size_of_learn_sample:]
-
-
-
-    #===============TRAINING DATA=================
-    train_labels = to_categorical(train_data[:,2].astype(int),num_classes=3)
-    train_data = train_data[:,0:2]
-
-
-
-    #===============TESTING DATA===================
-    test_labels = to_categorical(test_data[:,2].astype(int),num_classes=3)
-    test_data = test_data[:,0:2]
-
-
-
+    train_data, test_data, train_labels, test_labels = model_selection.train_test_split(data, labels, shuffle=True, test_size=0.10)
 
 
     with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells.pkl", "bw") as fh:
@@ -189,17 +182,29 @@ else:
 
 
 
-    print(train_data)
 
+
+
+
+
+
+
+
+
+
+
+
+
+    """
     #_________________________FIRST EXAMPLE______________________________________
 
 
     class_names = ['G1','S/G1','S/G2']
 
-
+    callbacks = [keras.callbacks.EarlyStopping(monitor='val_acc', patience=20)]
     model = keras.Sequential([
-        keras.layers.Dense(150, input_shape=(2,), activation=tf.nn.relu),
-        keras.layers.Dense(150, activation=tf.nn.relu),
+        keras.layers.Dense(150, input_shape=(2,), activation=tf.nn.relu,use_bias=True),
+        keras.layers.Dense(150, activation=tf.nn.relu,use_bias=True),
         keras.layers.Dense(3,activation=tf.nn.softmax)
     ])
 
@@ -207,12 +212,12 @@ else:
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
 
-    model.fit(train_data, train_labels, epochs=10000,batch_size=100,shuffle=True)
+    model.fit(train_data, train_labels, epochs=30000,batch_size=100,shuffle=True,validation_data=(test_data, test_labels),callbacks=callbacks)
 
     test_loss, test_acc = model.evaluate(test_data, test_labels)
 
     print('Test accuracy:', test_acc)
-
+    """
 
 
 
