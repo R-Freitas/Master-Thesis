@@ -37,25 +37,7 @@ def set_class(x):
     else:
         return 5
 
-class Cell_Info:
-    def __init__(self,Matrix,CellCycle):
-        self.Matrix = Matrix
-        self.Index = np.asarray(np.where(Matrix>0)).T
-        self.y_min = min(self.Index[:,0])
-        self.y_max = max(self.Index[:,0])
-        self.x_min = min(self.Index[:,1])
-        self.x_max = max(self.Index[:,1])
-        self.Area = np.count_nonzero(self.Matrix)
-        self.Intensity = self.Matrix.sum()
-        self.CellCycle = str(CellCycle)
-        self.Class = set_class(str(CellCycle))
-
-#--------------------------GLLOBAL VARIABLES------------------------------
-FRAME_SIZE=140
-#-------------------------------------------------------------------------
-
-new_data=0
-if (new_data==1) :
+def generate_save_data():
     count_files=0
     count_cells = 0
     dir = os.getcwd()
@@ -167,19 +149,99 @@ if (new_data==1) :
                 test_labels)
         pickle.dump(data, fh)
 
-
-else:
-
+def load_data():
     with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells.pkl", "br") as fh:
         data = pickle.load(fh)
 
 
-    train_data = data[0]
-    test_data = data[1]
-    train_labels = data[2]
-    test_labels = data[3]
+    x_train = data[0]
+    x_test = data[1]
+    y_train = data[2]
+    y_test = data[3]
+
+    return x_train, y_train, x_test, y_test
+
+def create_model(x_train, y_train, x_test, y_test):
+    """
+    Model providing function:
+
+    Create Keras model with double curly brackets dropped-in as needed.
+    Return value has to be a valid python dictionary with two customary keys:
+        - loss: Specify a numeric evaluation metric to be minimized
+        - status: Just use STATUS_OK and see hyperopt documentation if not feasible
+    The last one is optional, though recommended, namely:
+        - model: specify the model just created so that we can later use it again.
+    """
+    callbacks = [keras.callbacks.EarlyStopping(monitor='val_acc', patience=0)]
+
+    model = keras.Sequential()
+    model.add(keras.layers.Dense({{choice([500,750,1000])}}, input_shape=(2,), activation=tf.nn.relu,use_bias=True))
+    model.add(keras.layers.Dropout({{uniform(0, 1)}}))
+
+    model.add(keras.layers.Dense({{choice([500,750,1000])}}, input_shape=(2,), activation=tf.nn.relu,use_bias=True))
+    model.add(keras.layers.Dropout({{uniform(0, 1)}}))
+
+    if ({{choice(['two', 'three'])}}) == 'three':
+        model.add(keras.layers.Dense({{choice([500,750,1000])}}, input_shape=(2,), activation=tf.nn.relu,use_bias=True))
+        model.add(keras.layers.Dropout({{uniform(0, 1)}}))
 
 
+    model.add(keras.layers.Dense(3,activation=tf.nn.softmax))
+
+
+
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    model.fit(x_train, y_train,
+              epochs=1000,
+              batch_size={{choice([32,64,128])}},
+              shuffle=True,
+              validation_data=(x_test, y_test),
+              verbose=0,
+              callbacks=callbacks)
+
+
+    score, acc = model.evaluate(x_test, y_test, verbose=0)
+    print('Test accuracy:', acc)
+    return {'loss': -acc, 'status': STATUS_OK, 'model': model}
+
+class Cell_Info:
+    def __init__(self,Matrix,CellCycle):
+        self.Matrix = Matrix
+        self.Index = np.asarray(np.where(Matrix>0)).T
+        self.y_min = min(self.Index[:,0])
+        self.y_max = max(self.Index[:,0])
+        self.x_min = min(self.Index[:,1])
+        self.x_max = max(self.Index[:,1])
+        self.Area = np.count_nonzero(self.Matrix)
+        self.Intensity = self.Matrix.sum()
+        self.CellCycle = str(CellCycle)
+        self.Class = set_class(str(CellCycle))
+
+#--------------------------GLLOBAL VARIABLES------------------------------
+FRAME_SIZE=140
+#-------------------------------------------------------------------------
+
+new_data=0
+if (new_data==1) :
+    generate_save_data()
+
+else:
+
+
+    best_run, best_model = optim.minimize(model=create_model,
+                                          data=load_data,
+                                          algo=tpe.suggest,
+                                          max_evals=20,
+                                          trials=Trials())
+
+    X_train, Y_train, X_test, Y_test = load_data()
+    print("Evalutation of best performing model:")
+    print(best_model.evaluate(X_test,Y_test))
+    print("Best performing model chosen hyper-parameters:")
+    print(best_run)
 
 
 
