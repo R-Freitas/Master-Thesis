@@ -125,16 +125,12 @@ def generate_save_data():
 
 
     del cells
-    data = np.array([(cell.Area,cell.Intensity) for cell in treated_cells])
+    data = np.array([(cell.Matrix) for cell in treated_cells])
     labels = to_categorical(np.array([(int(cell.Class)) for cell in treated_cells]),num_classes=3)
 
 
 
-    scaler=preprocessing.MinMaxScaler()
-    print(np.std(data[:,0]),np.std(data[:,1]))
-    data=scaler.fit_transform(data)
-    print(np.amax(data[:,0]),np.amax(data[:,1]))
-    print(np.std(data[:,0]),np.std(data[:,1]))
+    data=data/255.0
     del treated_cells
 
 
@@ -142,8 +138,7 @@ def generate_save_data():
     train_data, test_data, train_labels, test_labels = model_selection.train_test_split(data, labels, shuffle=True, test_size=0.10)
     test_data, validate_data, test_labels, validate_labels = model_selection.train_test_split(test_data, test_labels, shuffle=True, test_size=0.50)
 
-
-    with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells.pkl", "bw") as fh:
+    with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells_pixel.pkl", "bw") as fh:
         data = (train_data,
                 test_data,
                 train_labels,
@@ -153,7 +148,7 @@ def generate_save_data():
         pickle.dump(data, fh)
 
 def load_data():
-    with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells.pkl", "br") as fh:
+    with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells_pixel.pkl", "br") as fh:
         data = pickle.load(fh)
 
 
@@ -161,19 +156,14 @@ def load_data():
     x_test = data[1]
     y_train = data[2]
     y_test = data[3]
-    x_validation = data[4]
-    y_validation = data[5]
 
     return x_train, y_train, x_test, y_test
 
 def load_validation():
-    with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells.pkl", "br") as fh:
+    with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells_pixel.pkl", "br") as fh:
         data = pickle.load(fh)
 
-    x_train = data[0]
-    x_test = data[1]
-    y_train = data[2]
-    y_test = data[3]
+
     x_validation = data[4]
     y_validation = data[5]
 
@@ -193,45 +183,40 @@ def optimize_model(x_train, y_train, x_test, y_test):
     callbacks = [keras.callbacks.EarlyStopping(monitor='val_acc', patience=0)]
 
     model = keras.Sequential()
-    model.add(keras.layers.Dense({{choice([500,750,1000])}}, input_shape=(2,), activation=tf.nn.relu,use_bias=True))
-    model.add(keras.layers.Dropout({{uniform(0, 1)}}))
+    model.add(keras.layers.Flatten(input_shape=(140, 140)))
 
-    model.add(keras.layers.Dense({{choice([500,750,1000])}}, input_shape=(2,), activation=tf.nn.relu,use_bias=True))
-    model.add(keras.layers.Dropout({{uniform(0, 1)}}))
-
-    if ({{choice(['two', 'three'])}}) == 'three':
-        model.add(keras.layers.Dense({{choice([500,750,1000])}}, input_shape=(2,), activation=tf.nn.relu,use_bias=True))
-        model.add(keras.layers.Dropout({{uniform(0, 1)}}))
-
+    for i in (range({{choice([5,10])}})):
+        model.add(keras.layers.Dense(500, activation=tf.nn.relu,use_bias=True))
 
     model.add(keras.layers.Dense(3,activation=tf.nn.softmax))
 
+    print ("CHOICE: ", i)
 
 
-    model.compile(optimizer='adam',
+
+
+    model.compile(optimizer=keras.optimizers.Adam(lr=0.001),
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
 
     model.fit(x_train, y_train,
-              epochs=1000,
-              batch_size={{choice([32,64,128])}},
-              shuffle=True,
+              epochs=100,
+              batch_size=1000,
               validation_data=(x_test, y_test),
-              verbose=0,
-              callbacks=callbacks)
+              verbose=0)
 
 
     score, acc = model.evaluate(x_test, y_test, verbose=0)
     print('Test accuracy:', acc)
+
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
 
 def create_model(x_train, y_train, x_test, y_test):
 
-    callbacks = [keras.callbacks.EarlyStopping(monitor='val_acc', patience=0)]
+
 
     model = keras.Sequential()
-    model.add(keras.layers.Dense(500, input_shape=(2,), activation=tf.nn.relu,use_bias=True))
-    model.add(keras.layers.Dropout(0.2))
+    model.add(keras.layers.Flatten(input_shape=(140, 140)))
 
     for i in (range(20)):
         model.add(keras.layers.Dense(500, activation=tf.nn.relu,use_bias=True))
@@ -240,7 +225,9 @@ def create_model(x_train, y_train, x_test, y_test):
     model.add(keras.layers.Dense(3,activation=tf.nn.softmax))
 
 
-    model.compile(optimizer=keras.optimizers.Adam(lr=0.0001),
+
+    callbacks = [keras.callbacks.EarlyStopping(monitor='val_loss', patience=2,mode='auto')]
+    model.compile(optimizer=keras.optimizers.Adam(lr=0.00001),
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
 
@@ -249,7 +236,6 @@ def create_model(x_train, y_train, x_test, y_test):
               shuffle=True,
               batch_size=1000,
               validation_data=(x_test, y_test))
-
 
     acc = history.history['acc']
     val_acc = history.history['val_acc']
@@ -306,7 +292,7 @@ else:
         best_run, best_model = optim.minimize(model=optimize_model,
                                               data=load_data,
                                               algo=tpe.suggest,
-                                              max_evals=20,
+                                              max_evals=3,
                                               trials=Trials())
         X_train, Y_train, X_test, Y_test = load_data()
         print("Evalutati on of best performing model:")
