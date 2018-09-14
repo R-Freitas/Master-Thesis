@@ -125,10 +125,38 @@ def generate_save_data():
 
 
     del cells
-    data = np.array([(cell.Area,cell.Intensity) for cell in treated_cells])
-    labels = to_categorical(np.array([(int(cell.Class)) for cell in treated_cells]),num_classes=3)
+    #data = np.array([(cell.Area,cell.Intensity) for cell in treated_cells])
+    #labels = to_categorical(np.array([(int(cell.Class)) for cell in treated_cells]),num_classes=3)
+
+    ###GENERATE SYNTHETIC DATA###
+    #Separate in the number of classes:
+    data_G1=np.array([(cell.Area,cell.Intensity) for cell in treated_cells if cell.Class==0])
+    data_S=np.array([(cell.Area,cell.Intensity) for cell in treated_cells if cell.Class==1])
+    data_G2=np.array([(cell.Area,cell.Intensity) for cell in treated_cells if cell.Class==2])
 
 
+    #data_G1=np.vstack((data_G1,np.random.multivariate_normal(np.mean(data_G1,axis=0),np.cov(data_G1,rowvar=False),size=len(data_G1))))
+    #data_S=np.vstack((data_S,np.random.multivariate_normal(np.mean(data_S,axis=0),np.cov(data_S,rowvar=False),size=2*len(data_S))))
+    #data_G2=np.vstack((data_G2,np.random.multivariate_normal(np.mean(data_G2,axis=0),np.cov(data_G2,rowvar=False),size=2*len(data_G2))))
+
+    labels_G1=np.empty(len(data_G1))
+    labels_G1.fill(0)
+    labels_G1 = to_categorical(labels_G1,num_classes=3)
+
+    labels_S=np.empty(len(data_S))
+    labels_S.fill(1)
+    labels_S = to_categorical(labels_S,num_classes=3)
+
+    labels_G2=np.empty(len(data_G2))
+    labels_G2.fill(2)
+    labels_G2 = to_categorical(labels_G2,num_classes=3)
+
+    labels=np.vstack((labels_G1,labels_S,labels_G2))
+    data = np.vstack((data_G1,data_S,data_G2))
+
+
+
+    print("Data points used: ", len(data))
 
     scaler=preprocessing.MinMaxScaler()
     print(np.std(data[:,0]),np.std(data[:,1]))
@@ -140,7 +168,8 @@ def generate_save_data():
 
 
     train_data, test_data, train_labels, test_labels = model_selection.train_test_split(data, labels, shuffle=True, test_size=0.10)
-    test_data, validate_data, test_labels, validate_labels = model_selection.train_test_split(test_data, test_labels, shuffle=True, test_size=0.50)
+    test_data, validate_data, test_labels, validate_labels = model_selection.train_test_split(test_data, test_labels, shuffle=True, test_size=0.40)
+
 
 
     with open("/Users/Rafa/Google Drive/Faculdade/Tese/Projecto/Treated_Data/pickled_cells.pkl", "bw") as fh:
@@ -230,24 +259,25 @@ def create_model(x_train, y_train, x_test, y_test):
     callbacks = [keras.callbacks.EarlyStopping(monitor='val_acc', patience=0)]
 
     model = keras.Sequential()
-    model.add(keras.layers.Dense(500, input_shape=(2,), activation=tf.nn.relu,use_bias=True))
-    model.add(keras.layers.Dropout(0.2))
+    model.add(keras.layers.Dense(1000, input_shape=(2,), activation=tf.nn.relu,use_bias=True))
+    #model.add(keras.layers.Dropout(0.2))
 
     for i in (range(20)):
-        model.add(keras.layers.Dense(500, activation=tf.nn.relu,use_bias=True))
-        model.add(keras.layers.Dropout(0.2))
+        model.add(keras.layers.Dense(1000, activation=tf.nn.relu,use_bias=True))
+        #model.add(keras.layers.Dropout(0.1))
 
     model.add(keras.layers.Dense(3,activation=tf.nn.softmax))
 
 
-    model.compile(optimizer=keras.optimizers.Adam(lr=0.0001),
+    model.compile(optimizer=keras.optimizers.Adam(lr=0.00001),
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
 
+
     history=model.fit(x_train, y_train,
-              epochs=300,
+              epochs=3000,
               shuffle=True,
-              batch_size=1000,
+              batch_size=100,
               validation_data=(x_test, y_test))
 
 
@@ -273,7 +303,9 @@ def create_model(x_train, y_train, x_test, y_test):
     plt.legend()
 
     plt.show()
-    x_validation, y_validation=load_validation()
+
+    x_validation, y_validation = load_validation()
+
     score, acc = model.evaluate(x_validation, y_validation)
     print('Test accuracy:', acc)
     return {'loss': -acc, 'status': STATUS_OK, 'model': model}
@@ -296,7 +328,7 @@ class Cell_Info:
 FRAME_SIZE=140
 #-------------------------------------------------------------------------
 
-new_data=0
+new_data=1
 if (new_data==1) :
     generate_save_data()
 
@@ -315,5 +347,6 @@ else:
         print(best_run)
 
     else:
+
         X_train, Y_train, X_test, Y_test = load_data()
         result, status, best_model = create_model(X_train, Y_train, X_test, Y_test)
