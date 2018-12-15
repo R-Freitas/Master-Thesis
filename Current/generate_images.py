@@ -18,6 +18,7 @@ from sklearn import model_selection
 import scipy.misc
 from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_array
 import cv2
+import shutil
 
 #--------------------------GLLOBAL VARIABLES------------------------------
 FRAME_SIZE = 180
@@ -121,6 +122,9 @@ def generate_images():
 
 
     for pos_list in range(len(directories_list)):
+        if os.path.exists(directories_list[pos_list]):
+            shutil.rmtree(directories_list[pos_list], ignore_errors=True)
+
         if not os.path.exists(directories_list[pos_list]):
             os.makedirs(directories_list[pos_list])
 
