@@ -41,7 +41,7 @@ def set_class(x):
     if x == 'G1':
         return 0
     elif ('S' in x and 'G1' in x):
-        return 1
+        return 2
     elif x == 'S':
         return 2
     elif ('S' in x and 'G2' in x):
