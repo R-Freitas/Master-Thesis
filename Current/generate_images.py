@@ -116,8 +116,8 @@ def generate_images():
     data_list=[data_G1_train, data_G1_test, data_G1_validate,
                data_G2_train, data_G2_test, data_G2_validate]
 
-    directories_list=["../../Treated_Data/Images/train/G1", "../../Treated_Data/Images/test/G1", "../../Treated_Data/Images/validate/G1",
-                      "../../Treated_Data/Images/train/G2", "../../Treated_Data/Images/test/G2", "../../Treated_Data/Images/validate/G2"]
+    directories_list=["../Treated_Data/Images/train/G1", "../Treated_Data/Images/test/G1", "../Treated_Data/Images/validate/G1",
+                      "../Treated_Data/Images/train/G2", "../Treated_Data/Images/test/G2", "../Treated_Data/Images/validate/G2"]
 
 
     for pos_list in range(len(directories_list)):
