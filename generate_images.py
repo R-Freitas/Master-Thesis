@@ -55,7 +55,7 @@ def generate_images():
     count_files = 0
     count_cells = 0
     imag_count = 0
-    dir = os.getcwd()
+    dir = '../Original_Data/'
     dirs = []
     dirs.append(dir)
 
@@ -102,16 +102,13 @@ def generate_images():
     del cells
 
     data_G1 = np.array([(cell.Matrix) for cell in treated_cells if (cell.Class == 0)])
-    #data_S = np.array([(cell.Matrix) for cell in treated_cells if cell.Class == 1])
     data_G2 = np.array([(cell.Matrix) for cell in treated_cells if cell.Class == 2])
 
 
     data_G1_train, data_G1_test = model_selection.train_test_split(data_G1, shuffle=True, test_size=0.10)
-    #data_S_train, data_S_test = model_selection.train_test_split(data_S, shuffle=True, test_size=0.10)
     data_G2_train, data_G2_test = model_selection.train_test_split(data_G2, shuffle=True, test_size=0.10)
 
     data_G1_test, data_G1_validate = model_selection.train_test_split(data_G1_test, shuffle=True, test_size=0.10)
-    #data_S_test, data_S_validate = model_selection.train_test_split(data_S_test, shuffle=True, test_size=0.10)
     data_G2_test, data_G2_validate = model_selection.train_test_split(data_G2_test, shuffle=True, test_size=0.10)
 
     data_list=[data_G1_train, data_G1_test, data_G1_validate,

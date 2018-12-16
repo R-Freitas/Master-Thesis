@@ -29,9 +29,9 @@ from sklearn import model_selection
 import cv2
 
 #Paths to save network weights and to obtain info
-image_directory = '../Treated_Data/Images_2C_withS'
+image_directory = '../Treated_Data/Images'
 #weights_load_path = '../Results/Current_Training/best-04-0.84.hdf5'
-weights_load_path ='../Results/CNN_2C_woutS/second_train_2C_wout_S.h5'
+weights_load_path ='../Results/Current_Training/best-02-0.83.hdf5'
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
 history_name = '/1_treino_2C_withS'
