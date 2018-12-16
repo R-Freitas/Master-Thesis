@@ -39,7 +39,7 @@ class Cell_Info:
 
 def set_class(x):
     if x == 'G1':
-        return 0
+        return 1
     elif ('S' in x and 'G1' in x):
         return 2
     elif x == 'S':
@@ -47,9 +47,9 @@ def set_class(x):
     elif ('S' in x and 'G2' in x):
         return 2
     elif x == 'G2':
-        return 4
+        return 2
     else:
-        return 5
+        return 0
 
 def generate_images():
     count_files = 0
@@ -101,7 +101,7 @@ def generate_images():
 
     del cells
 
-    data_G1 = np.array([(cell.Matrix) for cell in treated_cells if (cell.Class == 0)])
+    data_G1 = np.array([(cell.Matrix) for cell in treated_cells if (cell.Class == 1)])
     data_G2 = np.array([(cell.Matrix) for cell in treated_cells if cell.Class == 2])
 
 
