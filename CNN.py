@@ -40,7 +40,7 @@ weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
 history_name = '/tester'
 #Image generator settings
-train_batch_size = 100
+train_batch_size = 10
 train_images_generated = 50000
 validate_batch_size = 10
 
