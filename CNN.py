@@ -6,9 +6,11 @@ from keras.utils import np_utils
 from keras.preprocessing.image import ImageDataGenerator
 from keras import backend as K
 from keras.models import Sequential
-from keras.layers.core import Flatten, Dense, Dropout
+from keras.layers.core import Dropout, Flatten, Dense
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.optimizers import SGD, Adam
+from keras.layers import Input
+from keras.models import Model
 
 #Optimizar libraries
 from hyperopt import Trials, STATUS_OK, tpe
@@ -132,6 +134,35 @@ def VGG_16(weights_path=None):
 
 
     return model
+
+def pretrained_VGG(weights_path=None):
+    #Get back the convolutional part of a VGG network trained on ImageNet
+    model_vgg16_conv = VGG16(weights='imagenet', include_top=False, input_shape=(180,180,1))
+
+    #Create your own input format (here 3x200x200)
+    input = Input(shape=(1,180,180),name = 'image_input')
+
+    #Use the generated model
+    output_vgg16_conv = model_vgg16_conv(input)
+
+    #Add the fully-connected layers
+    x = Flatten(name='flatten')(output_vgg16_conv)
+    x = Dense(4096, activation='relu', name='fc1')(x)
+    x = Dense(4096, activation='relu', name='fc2')(x)
+    x = Dense(1, activation=tf.nn.sigmoid, name='predictions')(x)
+
+    #Create your own model
+    model = Model(input=input, output=x)
+    if weights_path:
+        model.load_weights(weights_path)
+
+    sgd = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
+    model.compile(optimizer = sgd,
+                  loss='binary_crossentropy',
+                  metrics=['accuracy'])
+
+    return model
+
 def test_channel_pos():
     if K.image_data_format() == 'channels_first':
         print("FIRST")
@@ -144,6 +175,7 @@ print("RUNNING CONVULOTIONAL NETWORK")
 
 if model_num == 2 :
     CNN_Network = VGG_16(weights_load_path)
+
 elif model_num == 1:
     CNN_Network = create_model(weights_load_path)
 else:
