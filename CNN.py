@@ -37,12 +37,12 @@ history_save_directory = '../Results/History_Objects'
 history_name = '/VGG_1_treino_2C_S_in_G2'
 
 #Image generator settings
-train_batch_size = 100
-train_images_generated = 50000
+train_batch_size = 10
+train_images_generated = 5000000
 validate_batch_size = 10
 
 #Essential Network settings
-epochs = 10
+epochs = 2
 learning_rate = 0.01
 
 
@@ -123,7 +123,7 @@ def VGG_16(weights_path=None):
         model.load_weights(weights_path)
 
     sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
-    model.compile(optimizer=Adam(lr= learning_rate),
+    model.compile(optimizer = sgd,
                   loss='binary_crossentropy',
                   metrics=['accuracy'])
 
@@ -190,36 +190,44 @@ if TESTING_MODE == 0 :
     filepath= weights_save_path + '/best-{epoch:02d}-{val_acc:.2f}.hdf5'
     checkpointer = keras.callbacks.ModelCheckpoint(filepath, verbose=1, save_best_only=True, save_weights_only=True, monitor='val_acc', mode='max')
     earlystopping = keras.callbacks.EarlyStopping(monitor='val_acc', patience=2)
+    try:
+        history=CNN_Network.fit_generator(
+                train_generator,
+                steps_per_epoch = train_images_generated // train_generator.batch_size,
+                epochs = epochs,
+                validation_data = validation_generator,
+                validation_steps = validation_generator.n // validation_generator.batch_size,
+                shuffle = True,
+                callbacks=[checkpointer,earlystopping])
 
-    history=CNN_Network.fit_generator(
-            train_generator,
-            steps_per_epoch = train_images_generated // train_generator.batch_size,
-            epochs = epochs,
-            validation_data = validation_generator,
-            validation_steps = validation_generator.n // validation_generator.batch_size,
-            shuffle = True,
-            callbacks=[checkpointer,earlystopping])
+        CNN_Network.save_weights(weights_save_path + '/last.hdf5')  # always save your weights after training or during training
+        with open(history_save_directory + history_name + '.pkl', 'wb') as f:
+                pickle.dump(history, f)
 
-    CNN_Network.save_weights(weights_save_path + '/last.hdf5')  # always save your weights after training or during training
-    with open(history_save_directory + history_name + '.pkl', 'wb') as f:
-            pickle.dump(history, f)
+        acc = history.history['acc']
+        val_acc = history.history['val_acc']
+        loss = history.history['loss']
+        val_loss = history.history['val_loss']
+        epochs = range(1, len(acc) + 1)
+        plt.plot(epochs, acc, 'bo', label='Training accuracy')
+        plt.plot(epochs, loss, 'b', label='Training loss')
+        plt.plot(epochs, val_acc, 'ro', label='Validation accuracy')
+        plt.plot(epochs, val_loss, 'r', label='Validation loss')
 
-    acc = history.history['acc']
-    val_acc = history.history['val_acc']
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
-    epochs = range(1, len(acc) + 1)
-    plt.plot(epochs, acc, 'bo', label='Training accuracy')
-    plt.plot(epochs, loss, 'b', label='Training loss')
-    plt.plot(epochs, val_acc, 'ro', label='Validation accuracy')
-    plt.plot(epochs, val_loss, 'r', label='Validation loss')
+        plt.title('Training and validation loss')
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.legend()
 
-    plt.title('Training and validation loss')
-    plt.xlabel('Epochs')
-    plt.ylabel('Loss')
-    plt.legend()
+        plt.show()
 
-    plt.show()
+    except KeyboardInterrupt:
+        print("Program interrupted, attempting to save.")
+        CNN_Network.save_weights(weights_save_path + '/interrupted.hdf5')
+        print('Output saved to: "{}./*"'.format(weights_save_path))
+        with open(history_save_directory + history_name + '.pkl', 'wb') as f:
+                pickle.dump(history, f)
+
 
 else:
     print(CNN_Network.evaluate_generator(cross_validation_generator, steps=len(cross_validation_generator), max_queue_size=10, workers=1, use_multiprocessing=False))
