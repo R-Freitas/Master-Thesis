@@ -27,6 +27,10 @@ import time
 from sklearn import preprocessing
 from sklearn import model_selection
 import cv2
+import h5py
+
+#MODELS
+from keras.applications.vgg16 import VGG16
 
 #Paths to save network weights and to obtain info
 image_directory = '../Treated_Data/Images'
@@ -34,17 +38,16 @@ image_directory = '../Treated_Data/Images'
 weights_load_path = None
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
-history_name = '/VGG_1_treino_2C_S_in_G2'
-
+history_name = '/tester'
 #Image generator settings
-train_batch_size = 10
-train_images_generated = 5000000
+train_batch_size = 100
+train_images_generated = 50000
 validate_batch_size = 10
 
 #Essential Network settings
 epochs = 2
-learning_rate = 0.01
-
+learning_rate = 0.1
+model_num = 2 #1 for own model/ 2 for VGG
 
 
 def create_model(weights_path=None):
@@ -122,14 +125,13 @@ def VGG_16(weights_path=None):
     if weights_path:
         model.load_weights(weights_path)
 
-    sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
+    sgd = SGD(lr=learning_rate, decay=1e-6, momentum=0.9, nesterov=True)
     model.compile(optimizer = sgd,
                   loss='binary_crossentropy',
                   metrics=['accuracy'])
 
 
     return model
-
 def test_channel_pos():
     if K.image_data_format() == 'channels_first':
         print("FIRST")
@@ -137,10 +139,16 @@ def test_channel_pos():
     else:
         print("LAST")
         exit()
-
 print("RUNNING CONVULOTIONAL NETWORK")
 #CNN_Network = create_model(weights_load_path)
-CNN_Network = VGG_16(weights_load_path)
+
+if model_num == 2 :
+    CNN_Network = VGG_16(weights_load_path)
+elif model_num == 1:
+    CNN_Network = create_model(weights_load_path)
+else:
+    print("Select valid model")
+    exit()
 
 train_datagen = ImageDataGenerator(
                 rescale = 1./255.,
@@ -185,13 +193,12 @@ cross_validation_generator = test_datagen.flow_from_directory(
 
 TESTING_MODE=0
 if TESTING_MODE == 0 :
-
-
-    filepath= weights_save_path + '/best-{epoch:02d}-{val_acc:.2f}.hdf5'
-    checkpointer = keras.callbacks.ModelCheckpoint(filepath, verbose=1, save_best_only=True, save_weights_only=True, monitor='val_acc', mode='max')
+    filepath= weights_save_path + '/' + str(model_num) + '_{epoch:02d}-{val_acc:.2f}.h5'
+    checkpointer = keras.callbacks.ModelCheckpoint(filepath, verbose=1, save_best_only=False, save_weights_only=True, monitor='val_acc', mode='max')
     earlystopping = keras.callbacks.EarlyStopping(monitor='val_acc', patience=2)
+
     try:
-        history=CNN_Network.fit_generator(
+        hist=CNN_Network.fit_generator(
                 train_generator,
                 steps_per_epoch = train_images_generated // train_generator.batch_size,
                 epochs = epochs,
@@ -200,14 +207,15 @@ if TESTING_MODE == 0 :
                 shuffle = True,
                 callbacks=[checkpointer,earlystopping])
 
-        CNN_Network.save_weights(weights_save_path + '/last.hdf5')  # always save your weights after training or during training
+        hist = hist.history
         with open(history_save_directory + history_name + '.pkl', 'wb') as f:
-                pickle.dump(history, f)
+                pickle.dump(hist, f)
 
-        acc = history.history['acc']
-        val_acc = history.history['val_acc']
-        loss = history.history['loss']
-        val_loss = history.history['val_loss']
+        acc = hist['acc']
+        val_acc = hist['val_acc']
+        loss = hist['loss']
+        val_loss = hist['val_loss']
+
         epochs = range(1, len(acc) + 1)
         plt.plot(epochs, acc, 'bo', label='Training accuracy')
         plt.plot(epochs, loss, 'b', label='Training loss')
@@ -223,11 +231,11 @@ if TESTING_MODE == 0 :
 
     except KeyboardInterrupt:
         print("Program interrupted, attempting to save.")
-        CNN_Network.save_weights(weights_save_path + '/interrupted.hdf5')
+        CNN_Network.save_weights(weights_save_path + '/interrupted.h5')
         print('Output saved to: "{}./*"'.format(weights_save_path))
-        with open(history_save_directory + history_name + '.pkl', 'wb') as f:
-                pickle.dump(history, f)
+
 
 
 else:
+    print("Evaluation results:")
     print(CNN_Network.evaluate_generator(cross_validation_generator, steps=len(cross_validation_generator), max_queue_size=10, workers=1, use_multiprocessing=False))
