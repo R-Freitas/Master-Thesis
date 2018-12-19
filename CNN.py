@@ -43,15 +43,32 @@ history_save_directory = '../Results/History_Objects'
 history_name = '/tester'
 #Image generator settings
 train_batch_size = 10
-train_images_generated = 50000
+train_images_generated = 100
 validate_batch_size = 10
 
 #Essential Network settings
 epochs = 2
 learning_rate = 0.01
-model_num = 2 #1 for own model/ 2 for VGG
+model_num = 1 #1 for own model/ 2 for VGG
 
+class BatchHistory(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        self.loss = []
+        self.acc = []
+        self.val_acc = []
+        self.val_loss = []
+        self.history={'loss':self.loss,'acc':self.acc, 'val_acc':self.val_acc, 'val_loss':self.val_loss}
 
+    def on_batch_end(self, batch, logs={}):
+        self.loss.append(logs.get('loss'))
+        self.acc.append(logs.get('acc'))
+        self.val_acc.append(logs.get('val_acc'))
+        self.val_loss.append(logs.get('val_loss'))
+
+        self.history['loss'] = self.loss
+        self.history['acc'] = self.acc
+        self.history['val_acc'] = self.val_acc
+        self.history['val_loss'] = self.val_loss
 def create_model(weights_path=None):
     model = keras.Sequential()
     model.add(keras.layers.Conv2D(32, (3, 3), input_shape=(180, 180,1)))
@@ -134,7 +151,6 @@ def VGG_16(weights_path=None):
 
 
     return model
-
 def pretrained_VGG(weights_path=None):
     #Get back the convolutional part of a VGG network trained on ImageNet
     model_vgg16_conv = VGG16(weights='imagenet', include_top=False, input_shape=(180,180,1))
@@ -162,7 +178,6 @@ def pretrained_VGG(weights_path=None):
                   metrics=['accuracy'])
 
     return model
-
 def test_channel_pos():
     if K.image_data_format() == 'channels_first':
         print("FIRST")
@@ -170,6 +185,8 @@ def test_channel_pos():
     else:
         print("LAST")
         exit()
+
+
 print("RUNNING CONVULOTIONAL NETWORK")
 #CNN_Network = create_model(weights_load_path)
 
@@ -225,11 +242,14 @@ cross_validation_generator = test_datagen.flow_from_directory(
 
 TESTING_MODE=0
 if TESTING_MODE == 0 :
-    filepath= weights_save_path + '/' + str(model_num) + '_{epoch:02d}-{val_acc:.2f}.h5'
-    checkpointer = keras.callbacks.ModelCheckpoint(filepath, verbose=1, save_best_only=False, save_weights_only=True, monitor='val_acc', mode='max')
-    earlystopping = keras.callbacks.EarlyStopping(monitor='val_acc', patience=2)
-
     try:
+        filepath= weights_save_path + '/' + str(model_num) + '_{epoch:02d}-{val_acc:.2f}.h5'
+
+
+        checkpointer = keras.callbacks.ModelCheckpoint(filepath, verbose=1, save_best_only=False, save_weights_only=True, monitor='val_acc', mode='max')
+        earlystopping = keras.callbacks.EarlyStopping(monitor='val_acc', patience=2)
+        batch_hist = BatchHistory()
+
         hist=CNN_Network.fit_generator(
                 train_generator,
                 steps_per_epoch = train_images_generated // train_generator.batch_size,
@@ -237,16 +257,23 @@ if TESTING_MODE == 0 :
                 validation_data = validation_generator,
                 validation_steps = validation_generator.n // validation_generator.batch_size,
                 shuffle = True,
-                callbacks=[checkpointer,earlystopping])
+                callbacks=[checkpointer,earlystopping,batch_hist])
 
         hist = hist.history
+        batch_hist = batch_hist.hist
+
         with open(history_save_directory + history_name + '.pkl', 'wb') as f:
                 pickle.dump(hist, f)
 
-        acc = hist['acc']
-        val_acc = hist['val_acc']
-        loss = hist['loss']
-        val_loss = hist['val_loss']
+
+
+        with open(history_save_directory + history_name + '_by_batch.pkl', 'wb') as f:
+                pickle.dump(batch_hist, f)
+
+        acc = batch_hist['acc']
+        val_acc = batch_hist['val_acc']
+        loss = batch_hist['loss']
+        val_loss = batch_hist['val_loss']
 
         epochs = range(1, len(acc) + 1)
         plt.plot(epochs, acc, 'bo', label='Training accuracy')
