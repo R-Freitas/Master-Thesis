@@ -40,16 +40,16 @@ image_directory = '../Treated_Data/Images'
 weights_load_path = None
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
-history_name = '/tester'
+history_name = '/VGG_1st_train_lr_001_batchsize_10'
 #Image generator settings
-train_batch_size = 10
-train_images_generated = 100
+train_batch_size = 100
+train_images_generated = 500000
 validate_batch_size = 10
 
 #Essential Network settings
 epochs = 2
-learning_rate = 0.01
-model_num = 1 #1 for own model/ 2 for VGG
+learning_rate = 0.001
+model_num = 2 #1 for own model/ 2 for VGG
 
 class BatchHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
