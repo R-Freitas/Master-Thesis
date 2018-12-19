@@ -48,7 +48,7 @@ validate_batch_size = 10
 
 #Essential Network settings
 epochs = 2
-learning_rate = 0.1
+learning_rate = 0.01
 model_num = 2 #1 for own model/ 2 for VGG
 
 
@@ -119,9 +119,9 @@ def VGG_16(weights_path=None):
 
     model.add(Flatten())
     model.add(Dense(4096, activation='relu'))
-    model.add(Dropout(0.5))
+    #model.add(Dropout(0.5))
     model.add(Dense(4096, activation='relu'))
-    model.add(Dropout(0.5))
+    #model.add(Dropout(0.5))
     model.add(Dense(1, activation=tf.nn.sigmoid))
 
     if weights_path:
