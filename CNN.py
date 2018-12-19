@@ -260,7 +260,7 @@ if TESTING_MODE == 0 :
                 callbacks=[checkpointer,earlystopping,batch_hist])
 
         hist = hist.history
-        batch_hist = batch_hist.hist
+        batch_hist = batch_hist.history
 
         with open(history_save_directory + history_name + '.pkl', 'wb') as f:
                 pickle.dump(hist, f)
