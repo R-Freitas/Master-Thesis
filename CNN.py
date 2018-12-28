@@ -37,10 +37,11 @@ from keras.applications.vgg16 import VGG16
 #Paths to save network weights and to obtain info
 image_directory = '../Treated_Data/Images'
 #weights_load_path = '../Results/Current_Training/best-04-0.84.hdf5'
-weights_load_path = '../Results/Weights/VGG_acc-083.h5'
+weights_load_path = '../Results/Weights/VGG_acc-083.h5' #USe this path
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
 history_name = '/VGG_1st_train_lr_001_batchsize_100'
+
 #Image generator settings
 train_batch_size = 100
 train_images_generated = 500000
@@ -69,6 +70,7 @@ class BatchHistory(keras.callbacks.Callback):
         self.history['acc'] = self.acc
         self.history['val_acc'] = self.val_acc
         self.history['val_loss'] = self.val_loss
+
 def create_model(weights_path=None):
     model = keras.Sequential()
     model.add(keras.layers.Conv2D(32, (3, 3), input_shape=(180, 180,1)))
@@ -96,6 +98,7 @@ def create_model(weights_path=None):
                   metrics=['accuracy'])
 
     return model
+
 def VGG_16(weights_path=None):
     model = Sequential()
     model.add(ZeroPadding2D((1,1),input_shape=(180, 180,1)))
@@ -151,6 +154,7 @@ def VGG_16(weights_path=None):
 
 
     return model
+
 def pretrained_VGG(weights_path=None):
     #Get back the convolutional part of a VGG network trained on ImageNet
     model_vgg16_conv = VGG16(weights='imagenet', include_top=False, input_shape=(180,180,1))
@@ -178,6 +182,7 @@ def pretrained_VGG(weights_path=None):
                   metrics=['accuracy'])
 
     return model
+
 def test_channel_pos():
     if K.image_data_format() == 'channels_first':
         print("FIRST")
@@ -188,16 +193,15 @@ def test_channel_pos():
 
 
 print("RUNNING CONVULOTIONAL NETWORK")
-#CNN_Network = create_model(weights_load_path)
 
 if model_num == 2 :
     CNN_Network = VGG_16(weights_load_path)
-
 elif model_num == 1:
     CNN_Network = create_model(weights_load_path)
 else:
     print("Select valid model")
     exit()
+
 
 train_datagen = ImageDataGenerator(
                 rescale = 1./255.,
@@ -244,7 +248,6 @@ TESTING_MODE=0
 if TESTING_MODE == 0 :
     try:
         filepath= weights_save_path + '/' + str(model_num) + '_{epoch:02d}-{val_acc:.2f}.h5'
-
 
         checkpointer = keras.callbacks.ModelCheckpoint(filepath, verbose=1, save_best_only=False, save_weights_only=True, monitor='val_acc', mode='max')
         earlystopping = keras.callbacks.EarlyStopping(monitor='val_acc', patience=2)
