@@ -37,7 +37,7 @@ from keras.applications.vgg16 import VGG16
 #Paths to save network weights and to obtain info
 image_directory = '../Treated_Data/Images'
 #weights_load_path = '../Results/Current_Training/best-04-0.84.hdf5'
-weights_load_path = None
+weights_load_path = '../Results/Weights/VGG_acc-083.h5'
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
 history_name = '/VGG_1st_train_lr_001_batchsize_100'
@@ -47,7 +47,7 @@ train_images_generated = 500000
 validate_batch_size = 10
 
 #Essential Network settings
-epochs = 2
+epochs = 1
 learning_rate = 0.001
 model_num = 2 #1 for own model/ 2 for VGG
 
