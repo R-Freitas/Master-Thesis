@@ -40,7 +40,7 @@ image_directory = '../Treated_Data/Images'
 weights_load_path = '../Results/Weights/VGG_acc-083.h5' #USe this path
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
-history_name = '/VGG_1st_train_lr_001_batchsize_100'
+history_name = '/VGG_2st_train_lr_001_batchsize_100'
 
 #Image generator settings
 train_batch_size = 100
