@@ -249,7 +249,7 @@ if TESTING_MODE == 0 :
     try:
         filepath= weights_save_path + '/' + str(model_num) + '_{epoch:02d}-{val_acc:.2f}.h5'
 
-        checkpointer = keras.callbacks.ModelCheckpoint(filepath, verbose=1, save_best_only=False, save_weights_only=True, monitor='val_acc', mode='max')
+        checkpointer = keras.callbacks.ModelCheckpoint(filepath, verbose=1, save_best_only=True, save_weights_only=True, monitor='val_acc', mode='max')
         earlystopping = keras.callbacks.EarlyStopping(monitor='val_acc', patience=2)
         batch_hist = BatchHistory()
 
