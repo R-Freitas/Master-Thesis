@@ -40,7 +40,7 @@ image_directory = '../Treated_Data/Images'
 weights_load_path = None #USe this path
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
-history_name = '/CNN_1st_train_lr_001_batchsize_100'
+history_name = '/CNN_2nd_train_lr_001_batchsize_100_no_stop'
 
 #Image generator settings
 train_batch_size = 100
@@ -260,7 +260,7 @@ if TESTING_MODE == 0 :
                 validation_data = validation_generator,
                 validation_steps = validation_generator.n // validation_generator.batch_size,
                 shuffle = True,
-                callbacks=[checkpointer,earlystopping,batch_hist])
+                callbacks=[checkpointer,batch_hist])
 
         hist = hist.history
         batch_hist = batch_hist.history
