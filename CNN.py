@@ -37,10 +37,10 @@ from keras.applications.vgg16 import VGG16
 #Paths to save network weights and to obtain info
 image_directory = '../Treated_Data/Images'
 #weights_load_path = '../Results/Current_Training/best-04-0.84.hdf5'
-weights_load_path = '../Results/Weights/VGG_acc-083.h5' #USe this path
+weights_load_path = None #USe this path
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
-history_name = '/VGG_2st_train_lr_001_batchsize_100'
+history_name = '/CNN_1st_train_lr_001_batchsize_100'
 
 #Image generator settings
 train_batch_size = 100
@@ -48,9 +48,9 @@ train_images_generated = 500000
 validate_batch_size = 10
 
 #Essential Network settings
-epochs = 1
+epochs = 100
 learning_rate = 0.001
-model_num = 2 #1 for own model/ 2 for VGG
+model_num = 1 #1 for own model/ 2 for VGG
 
 class BatchHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -268,11 +268,10 @@ if TESTING_MODE == 0 :
         with open(history_save_directory + history_name + '.pkl', 'wb') as f:
                 pickle.dump(hist, f)
 
-
-
         with open(history_save_directory + history_name + '_by_batch.pkl', 'wb') as f:
                 pickle.dump(batch_hist, f)
 
+        """
         acc = batch_hist['acc']
         val_acc = batch_hist['val_acc']
         loss = batch_hist['loss']
@@ -290,13 +289,12 @@ if TESTING_MODE == 0 :
         plt.legend()
 
         plt.show()
+        """
 
     except KeyboardInterrupt:
         print("Program interrupted, attempting to save.")
         CNN_Network.save_weights(weights_save_path + '/interrupted.h5')
         print('Output saved to: "{}./*"'.format(weights_save_path))
-
-
 
 else:
     print("Evaluation results:")
