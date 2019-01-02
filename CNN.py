@@ -44,7 +44,7 @@ history_name = '/CNN_1st_train_lr_001_batchsize_100'
 
 #Image generator settings
 train_batch_size = 100
-train_images_generated = 500000
+train_images_generated = 50000
 validate_batch_size = 10
 
 #Essential Network settings
@@ -292,7 +292,7 @@ if TESTING_MODE == 0 :
         """
 
     except KeyboardInterrupt:
-        print("Program interrupted, attempting to save.")
+        print("\n Program interrupted, attempting to save.")
         CNN_Network.save_weights(weights_save_path + '/interrupted.h5')
         print('Output saved to: "{}./*"'.format(weights_save_path))
 
