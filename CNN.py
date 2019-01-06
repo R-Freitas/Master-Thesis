@@ -37,10 +37,10 @@ from keras.applications.vgg16 import VGG16
 #Paths to save network weights and to obtain info
 image_directory = '../Treated_Data/Images'
 #weights_load_path = '../Results/Current_Training/best-04-0.84.hdf5'
-weights_load_path = '../Results/Current_Training/1_67-0.87.h5' #USe this path
+weights_load_path = '../Results/Weights/CNN/CNN_2nd_lr_001_087.h5' #USe this path
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
-history_name = '/CNN_2nd_train_lr_001_batchsize_100_no_stop'
+history_name = '/PLEASE_INSERT_NAME'
 
 #Image generator settings
 train_batch_size = 100
