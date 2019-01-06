@@ -37,7 +37,7 @@ from keras.applications.vgg16 import VGG16
 #Paths to save network weights and to obtain info
 image_directory = '../Treated_Data/Images'
 #weights_load_path = '../Results/Current_Training/best-04-0.84.hdf5'
-weights_load_path = None #USe this path
+weights_load_path = '../Results/Current_Training/1_51-0.87.h5' #USe this path
 weights_save_path = '../Results/Current_Training'
 history_save_directory = '../Results/History_Objects'
 history_name = '/CNN_2nd_train_lr_001_batchsize_100_no_stop'
@@ -244,7 +244,7 @@ cross_validation_generator = test_datagen.flow_from_directory(
 
 
 
-TESTING_MODE=0
+TESTING_MODE=1
 if TESTING_MODE == 0 :
     try:
         filepath= weights_save_path + '/' + str(model_num) + '_{epoch:02d}-{val_acc:.2f}.h5'
