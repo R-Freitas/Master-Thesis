@@ -235,7 +235,7 @@ validation_generator = test_datagen.flow_from_directory(
         shuffle = 'True')
 
 cross_validation_generator = test_datagen.flow_from_directory(
-        image_directory + '/validate',  # this is the target directory
+        image_directory + '/test',  # this is the target directory
         target_size = (180, 180),
         batch_size = validate_batch_size,
         color_mode = 'grayscale',
